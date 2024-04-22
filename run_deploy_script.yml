@@ -1,0 +1,33 @@
+---
+- name: Execute deploy script on a remote host and create uptime cron job
+  hosts: all
+  become: yes
+
+  tasks:
+    - name: Copy deploy script to remote host
+      copy:
+        src: /scripts/deploy.sh
+        dest: /tmp/deploy.sh
+        owner: root
+        group: root
+        mode: 0755
+
+    - name: Execute the script
+      command: /tmp/deploy.sh
+
+    - name: create log file
+      file:
+        path: /var/log/uptime.log
+        state: touch
+        owner: root
+        group: root
+        mode: 0644
+
+    - name: setup cron job for uptime
+      cron:
+        name: check uptime
+        minute: "0"
+        hour: "0"
+        job: "echo $(date + '%Y-%m-%d %H-%M-%S') $(uptime -p) >> /var/log/uptime.log"
+
+
